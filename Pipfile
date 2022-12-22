@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyppeteer = "*"
+
+#test
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+pytest-mock = "*"
+pytest-asyncio = "*"
+pytest-forked = "*"
+pytest-randomly = "*"
+pytest-timeout = "*"
+pytest-watch = "*"
+pytest-repeat = "*"
+pytest-rerunfailures = "*"
+flake8 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
