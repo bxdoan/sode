@@ -1,6 +1,7 @@
 # Số Đề
-cralwer lottery result from xoso.com.vn 
+crawler lottery result from xoso.com.vn 
 
+the result will be saved in `*.database.json` file
 
 ## Install
 ```sh
