@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import json
 import asyncio
@@ -5,6 +6,7 @@ from pyppeteer import launch
 
 URL_PATH = 'https://xoso.com.vn'
 FILE_NAME = 'xsmb.database.json'
+BEGIN_DATE = datetime.date(2007, 8, 18)
 
 
 def read_json(filename):
@@ -17,19 +19,46 @@ def write_json(filename, data):
         json.dump(data, f, indent=4)
 
 
-async def main():
+def s2d(val: 'str') -> datetime.date:
+    dt = s2dt(val)
+    d  = dt.date() if dt else None
+    return d
+
+
+def s2dt(val:'str') -> datetime:
+    """
+    handles all conversions of string (with or without timezone) to datetime (with timezone) except YYYY-MM
+    if no timezone is stated, UTC is assumed
+    """
+    if not val: return None
+
+    val = val.strip("'").strip('"')
+    try:
+        dt = datetime.datetime.strptime(val, '%d-%m-%Y')
+        return dt
+    except ValueError:
+        return None
+
+
+async def main(from_date_query=None, to_date_query=None):
     browser = await launch(
         ignoreHTTPSErrors=True,
         headless=False,
     )
     page = await browser.newPage()
-    from_date_query = datetime.date(2022, 12, 1)
-    to_date_query = datetime.date(2022, 12, 21)
+    if from_date_query is None:
+        from_date_query = datetime.date(2022, 12, 1)
+    if to_date_query is None:
+        to_date_query = datetime.date.today()
+
     res = []
     while from_date_query < to_date_query:
         date_str = from_date_query.strftime('%d-%m-%Y')
-        await page.goto(f'{URL_PATH}/xsmb-{date_str}.html')
+        url_query = f'{URL_PATH}/xsmb-{date_str}.html'
+        print(f'Querying {url_query}')
         try:
+            await page.goto(url_query)
+
             dimensions = await page.evaluate('''() => {
             const special = document
               .querySelectorAll("span.special-prize")[0]
@@ -81,9 +110,28 @@ async def main():
             from_date_query += datetime.timedelta(days=1)
         except Exception as e:
             print(e)
+            from_date_query += datetime.timedelta(days=1)
             continue
 
     await browser.close()
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Argparse arguments
+    parser = argparse.ArgumentParser(
+        description="Scan all data from 2007 to now."
+    )
+
+    parser.add_argument(
+        "-f", "--from-date",
+        help="\033[32m\033[1m\nFrom date (default last month)\033[0m"
+    )
+
+    parser.add_argument(
+        "-t", "--to-date",
+        help="\033[32m\033[1m\nTo date (default now) \033[0m"
+    )
+
+    from_date = s2d(parser.parse_args().from_date)
+    to_date = s2d(parser.parse_args().to_date)
+    asyncio.run(main(from_date_query=from_date, to_date_query=to_date))
