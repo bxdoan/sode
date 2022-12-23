@@ -20,5 +20,5 @@ python3 sode.py
 
 you can also crawl the result of a specific day
 ```shell
-python3 sode.py --from-date 2019-01-01 --to-date 2019-10-01
+python3 sode.py --from-date 01-01-2019 --to-date 10-01-2019
 ```
