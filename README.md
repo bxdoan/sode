@@ -20,5 +20,11 @@ python3 sode.py
 
 you can also crawl the result of a specific day
 ```shell
-python3 sode.py --from-date 01-01-2019 --to-date 10-01-2019
+python3 sode.py --from-date 01-01-2022 --to-date 28-12-2022
+```
+
+## Error
+find and kill pyppeteer process
+```shell
+kill -9 `ps aux | grep pyppeteer | grep -v grep | awk '{print $2}'`
 ```

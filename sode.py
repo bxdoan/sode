@@ -47,17 +47,17 @@ async def main(from_date_query=None, to_date_query=None):
     )
     page = await browser.newPage()
     if from_date_query is None:
-        from_date_query = datetime.date(2022, 12, 1)
+        from_date_query = BEGIN_DATE
     if to_date_query is None:
-        to_date_query = datetime.date.today()
+        to_date_query = datetime.date.today() - datetime.timedelta(days=1)
 
     res = []
     while from_date_query < to_date_query:
-        date_str = from_date_query.strftime('%d-%m-%Y')
+        date_str = to_date_query.strftime('%d-%m-%Y')
         url_query = f'{URL_PATH}/xsmb-{date_str}.html'
         print(f'Querying {url_query}')
         try:
-            await page.goto(url_query)
+            await page.goto(url_query, {"waitUntil": 'load'})
 
             dimensions = await page.evaluate('''() => {
             const special = document
@@ -106,11 +106,18 @@ async def main(from_date_query=None, to_date_query=None):
           }''')
             dimensions['date'] = date_str
             res.append(dimensions)
-            write_json(FILE_NAME, {"prices": res})
-            from_date_query += datetime.timedelta(days=1)
+            write_json(FILE_NAME, {"prizes": res})
+            await asyncio.sleep(1)
+            to_date_query -= datetime.timedelta(days=1)
         except Exception as e:
+            await browser.close()
             print(e)
-            from_date_query += datetime.timedelta(days=1)
+            to_date_query -= datetime.timedelta(days=1)
+            browser = await launch(
+                ignoreHTTPSErrors=True,
+                headless=False,
+            )
+            page = await browser.newPage()
             continue
 
     await browser.close()
@@ -124,12 +131,12 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-f", "--from-date",
-        help="\033[32m\033[1m\nFrom date (default last month)\033[0m"
+        help="\033[32m\033[1m\nFrom date (default 18-08-2007)\033[0m"
     )
 
     parser.add_argument(
         "-t", "--to-date",
-        help="\033[32m\033[1m\nTo date (default now) \033[0m"
+        help="\033[32m\033[1m\nTo date (default yesterday) \033[0m"
     )
 
     from_date = s2d(parser.parse_args().from_date)
